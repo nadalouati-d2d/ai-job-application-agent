@@ -182,3 +182,50 @@ def test_remote_job_with_unknown_canada_eligibility_requires_review():
     )
 
     assert result.status == EligibilityStatus.NEEDS_REVIEW
+
+def test_two_years_with_explicit_education_alternative_requires_review():
+    result = evaluate_eligibility(
+        base_job(
+            mandatory_cybersecurity_years=2,
+            experience_alternatives_explicit=True,
+            education_substitution=True,
+        )
+    )
+
+    assert result.status == EligibilityStatus.NEEDS_REVIEW
+
+
+def test_two_years_with_explicit_internship_alternative_requires_review():
+    result = evaluate_eligibility(
+        base_job(
+            mandatory_cybersecurity_years=2,
+            experience_alternatives_explicit=True,
+            accepts_internships=True,
+        )
+    )
+
+    assert result.status == EligibilityStatus.NEEDS_REVIEW
+
+
+def test_two_years_without_explicit_alternative_is_excluded():
+    result = evaluate_eligibility(
+        base_job(
+            mandatory_cybersecurity_years=2,
+            experience_alternatives_explicit=False,
+            education_substitution=True,
+        )
+    )
+
+    assert result.status == EligibilityStatus.EXCLUDED
+
+
+def test_three_years_preferred_remains_suitable():
+    result = evaluate_eligibility(
+        base_job(
+            mandatory_cybersecurity_years=0,
+            preferred_cybersecurity_years=3,
+            experience_alternatives_explicit=False,
+        )
+    )
+
+    assert result.status == EligibilityStatus.SUITABLE

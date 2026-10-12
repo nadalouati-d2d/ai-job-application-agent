@@ -41,6 +41,7 @@ class JobRequirements(BaseModel):
     accepts_coursework: bool | None = None
     accepts_recent_graduates: bool | None = None
     education_substitution: bool | None = None
+    experience_alternatives_explicit: bool | None = None
 
 
 class EligibilityResult(BaseModel):
@@ -79,17 +80,37 @@ def evaluate_eligibility(
         )
 
     # Hard exclusion: mandatory professional cybersecurity experience
+        # Hard exclusion: mandatory professional cybersecurity experience
     if (
         job.mandatory_cybersecurity_years is not None
         and job.mandatory_cybersecurity_years
         > max_professional_cybersecurity_years
     ):
-        exclusion_reasons.append(
-            "Mandatory professional cybersecurity experience "
-            f"({job.mandatory_cybersecurity_years:g} years) "
-            f"exceeds the allowed maximum "
-            f"({max_professional_cybersecurity_years:g} year)."
+        has_explicit_alternative = (
+            job.experience_alternatives_explicit is True
+            and (
+                job.education_substitution is True
+                or job.accepts_internships is True
+                or job.accepts_projects is True
+                or job.accepts_coursework is True
+                or job.accepts_recent_graduates is True
+            )
         )
+
+        if has_explicit_alternative:
+            review_reasons.append(
+                "Experience requirement exceeds the normal junior limit, "
+                "but the posting explicitly allows an alternative such as "
+                "education, internship, projects, coursework, or "
+                "recent-graduate experience."
+            )
+        else:
+            exclusion_reasons.append(
+                "Mandatory professional cybersecurity experience "
+                f"({job.mandatory_cybersecurity_years:g} years) "
+                f"exceeds the allowed maximum "
+                f"({max_professional_cybersecurity_years:g} year)."
+            )
 
     # Needs review: student-only role
     if job.student_only is True:
