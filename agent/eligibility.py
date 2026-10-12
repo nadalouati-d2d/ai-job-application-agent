@@ -23,6 +23,7 @@ class JobRequirements(BaseModel):
     preferred_cybersecurity_years: float | None = None
 
     citizenship_required: bool | None = None
+    required_clearance: str | None = None
     student_only: bool | None = None
     senior_role: bool | None = None
 
@@ -53,6 +54,7 @@ class EligibilityResult(BaseModel):
 def evaluate_eligibility(
     job: JobRequirements,
     max_professional_cybersecurity_years: float = 1,
+    candidate_clearance: str | None = "Reliability",
 ) -> EligibilityResult:
     """
     Evaluate whether a job should proceed to deeper AI analysis.
@@ -72,6 +74,40 @@ def evaluate_eligibility(
         exclusion_reasons.append(
             "Job requires citizenship."
         )
+    
+        # Clearance requirement
+    clearance_levels = {
+        "reliability": 1,
+        "secret": 2,
+        "top secret": 3,
+    }
+
+    if job.required_clearance is not None:
+        required = clearance_levels.get(
+            job.required_clearance.strip().lower()
+        )
+
+        candidate = (
+            clearance_levels.get(candidate_clearance.strip().lower())
+            if candidate_clearance
+            else None
+        )
+
+        if required is None:
+            review_reasons.append(
+                f"Unknown clearance requirement: "
+                f"{job.required_clearance}."
+            )
+        elif candidate is None:
+            review_reasons.append(
+                "Job requires security clearance, but the candidate "
+                "clearance could not be verified."
+            )
+        elif candidate < required:
+            review_reasons.append(
+                f"Job requires {job.required_clearance} clearance, "
+                f"but candidate has {candidate_clearance}."
+            )
 
     # Hard exclusion: senior role
     if job.senior_role is True:

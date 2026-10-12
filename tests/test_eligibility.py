@@ -229,3 +229,38 @@ def test_three_years_preferred_remains_suitable():
     )
 
     assert result.status == EligibilityStatus.SUITABLE
+
+def test_reliability_clearance_is_suitable():
+    result = evaluate_eligibility(
+        base_job(required_clearance="Reliability"),
+        candidate_clearance="Reliability",
+    )
+
+    assert result.status == EligibilityStatus.SUITABLE
+
+
+def test_secret_clearance_requires_review():
+    result = evaluate_eligibility(
+        base_job(required_clearance="Secret"),
+        candidate_clearance="Reliability",
+    )
+
+    assert result.status == EligibilityStatus.NEEDS_REVIEW
+
+
+def test_top_secret_clearance_requires_review():
+    result = evaluate_eligibility(
+        base_job(required_clearance="Top Secret"),
+        candidate_clearance="Reliability",
+    )
+
+    assert result.status == EligibilityStatus.NEEDS_REVIEW
+
+
+def test_unknown_clearance_requires_review():
+    result = evaluate_eligibility(
+        base_job(required_clearance="Enhanced Security Clearance"),
+        candidate_clearance="Reliability",
+    )
+
+    assert result.status == EligibilityStatus.NEEDS_REVIEW
