@@ -27,8 +27,12 @@ class JobRequirements(BaseModel):
     senior_role: bool | None = None
 
     location: str | None = None
-    remote_eligible_canada: bool | None = None
+
+    work_arrangement: str | None = None
+    worksite_verified: bool | None = None
     commute_minutes: int | None = None
+
+    remote_eligible_canada: bool | None = None  
 
     expired: bool | None = None
 
@@ -100,14 +104,40 @@ def evaluate_eligibility(
             "requirement is unknown."
         )
 
-    # Needs review: workplace cannot yet be evaluated
-    if (
-        job.location is None
-        and job.remote_eligible_canada is not True
-    ):
-        review_reasons.append(
-            "Worksite or remote eligibility is unknown."
-        )
+    # Location and work-arrangement eligibility
+    arrangement = (
+        job.work_arrangement.lower()
+        if job.work_arrangement
+        else None
+    )
+
+    if arrangement == "remote":
+        if job.remote_eligible_canada is not True:
+            review_reasons.append(
+                "Remote eligibility for Canada is unknown."
+            )
+
+    elif arrangement in {"onsite", "hybrid"}:
+        if job.worksite_verified is not True:
+            review_reasons.append(
+                "Onsite/hybrid worksite has not been verified."
+            )
+        elif job.commute_minutes is None:
+            review_reasons.append(
+                "Commute time to the verified worksite is unknown."
+            )
+        elif job.commute_minutes > 30:
+            exclusion_reasons.append(
+                f"Verified commute ({job.commute_minutes} minutes) "
+                "exceeds the 30-minute limit."
+            )
+
+    else:
+        # Arrangement itself is unknown.
+        if job.remote_eligible_canada is not True:
+            review_reasons.append(
+                "Work arrangement or remote eligibility is unknown."
+            )
 
     # Hard exclusions always win.
     if exclusion_reasons:

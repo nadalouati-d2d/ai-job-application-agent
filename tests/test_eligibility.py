@@ -12,8 +12,13 @@ def base_job(**overrides):
         "citizenship_required": False,
         "student_only": False,
         "senior_role": False,
+
         "location": "Ottawa, ON",
+        "work_arrangement": "hybrid",
+        "worksite_verified": True,
+        "commute_minutes": 20,
         "remote_eligible_canada": False,
+
         "expired": False,
     }
 
@@ -106,6 +111,9 @@ def test_unknown_worksite_requires_review():
     result = evaluate_eligibility(
         base_job(
             location=None,
+            work_arrangement=None,
+            worksite_verified=None,
+            commute_minutes=None,
             remote_eligible_canada=None,
         )
     )
@@ -117,8 +125,60 @@ def test_canada_remote_job_can_be_suitable_without_location():
     result = evaluate_eligibility(
         base_job(
             location=None,
+            work_arrangement="remote",
+            worksite_verified=None,
+            commute_minutes=None,
             remote_eligible_canada=True,
         )
     )
 
     assert result.status == EligibilityStatus.SUITABLE
+
+def test_verified_onsite_job_within_commute_is_suitable():
+    result = evaluate_eligibility(
+        base_job(
+            work_arrangement="onsite",
+            worksite_verified=True,
+            commute_minutes=25,
+        )
+    )
+
+    assert result.status == EligibilityStatus.SUITABLE
+
+
+def test_verified_onsite_job_beyond_commute_is_excluded():
+    result = evaluate_eligibility(
+        base_job(
+            work_arrangement="onsite",
+            worksite_verified=True,
+            commute_minutes=45,
+        )
+    )
+
+    assert result.status == EligibilityStatus.EXCLUDED
+
+
+def test_hybrid_job_with_unverified_worksite_requires_review():
+    result = evaluate_eligibility(
+        base_job(
+            work_arrangement="hybrid",
+            worksite_verified=False,
+            commute_minutes=None,
+        )
+    )
+
+    assert result.status == EligibilityStatus.NEEDS_REVIEW
+
+
+def test_remote_job_with_unknown_canada_eligibility_requires_review():
+    result = evaluate_eligibility(
+        base_job(
+            location=None,
+            work_arrangement="remote",
+            worksite_verified=None,
+            commute_minutes=None,
+            remote_eligible_canada=None,
+        )
+    )
+
+    assert result.status == EligibilityStatus.NEEDS_REVIEW
