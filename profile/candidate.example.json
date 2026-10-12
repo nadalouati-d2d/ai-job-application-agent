@@ -1,0 +1,170 @@
+{
+  "profile_version": "1.0",
+
+  "identity": {
+    "name": "Example Candidate",
+    "location": "Example City, ON",
+    "email": "candidate@example.com",
+    "phone": "000-000-0000",
+    "linkedin": "https://www.linkedin.com/in/example"
+  },
+
+  "work_authorization": {
+    "country": "Canada",
+    "status": "permanent_resident",
+    "citizen": false,
+    "security_clearance": {
+      "level": "Example clearance",
+      "country": "Canada",
+      "granted": true
+    }
+  },
+
+  "career": {
+    "target_seniority": [
+      "entry-level",
+      "junior"
+    ],
+    "target_roles": [
+      "Cybersecurity Analyst",
+      "SOC Analyst"
+    ],
+    "target_domains": [
+      "security_operations",
+      "incident_response"
+    ]
+  },
+
+  "professional_experience": [
+    {
+      "id": "example-security-internship",
+      "title": "Cybersecurity Intern",
+      "employer": "Example Company",
+      "location": "Example City, ON",
+      "start": "2026-01",
+      "end": null,
+      "current": true,
+      "employment_type": "internship",
+      "evidence_level": "professional",
+      "categories": [
+        "security_operations"
+      ],
+      "verified": true,
+      "facts": [
+        "Reviewed security configurations and documented verified findings."
+      ]
+    }
+  ],
+
+  "academic_experience": [],
+
+  "projects": [
+    {
+      "id": "example-soc-project",
+      "name": "Example Security Monitoring Project",
+      "type": "hands_on_project",
+      "evidence_level": "hands_on_project",
+      "professional_experience": false,
+      "verified": true,
+      "categories": [
+        "soc",
+        "threat_detection"
+      ],
+      "technologies": [
+        "Example SIEM"
+      ],
+      "facts": [
+        "Analyzed simulated security events in a controlled lab environment."
+      ]
+    }
+  ],
+
+  "education": [
+    {
+      "credential": "Graduate Certificate",
+      "field": "Cybersecurity",
+      "institution": "Example College",
+      "location": "Example City, ON",
+      "year": 2026,
+      "gpa": null
+    }
+  ],
+
+  "certifications": {
+    "completed": [],
+    "in_progress": []
+  },
+
+  "skills": {
+    "security_operations": [
+      "Security monitoring",
+      "Alert triage"
+    ]
+  },
+
+  "languages": [
+    {
+      "language": "English",
+      "level": "Professional working proficiency"
+    }
+  ],
+
+  "job_search_constraints": {
+    "base_location": "Example City, ON",
+    "max_commute_minutes": 30,
+    "remote_allowed": [
+      "Ontario",
+      "Canada"
+    ],
+    "target_experience_level": [
+      "entry-level",
+      "junior"
+    ],
+    "max_mandatory_professional_cybersecurity_years": 1,
+    "allow_zero_to_one_year_roles": true,
+    "allow_recent_graduate_roles": true,
+    "allow_roles_accepting_internships": true,
+    "allow_roles_accepting_projects": true,
+    "allow_roles_accepting_coursework": true,
+    "allow_education_substitution": true,
+    "reject_mandatory_two_plus_professional_cybersecurity_years": true,
+    "reject_citizenship_required": true,
+    "reject_senior_roles": true,
+    "reject_expired_jobs": true,
+    "student_only_roles": "needs_review",
+    "unknown_worksite": "needs_review",
+    "unknown_remote_eligibility": "needs_review",
+    "ambiguous_experience_requirement": "needs_review",
+    "missing_information": "preserve_as_unknown"
+  },
+
+  "truth_policy": {
+    "professional_cybersecurity_experience_sources": [
+      "professional_experience"
+    ],
+    "academic_experience_counts_as_professional_employment": true,
+    "academic_experience_counts_as_professional_cybersecurity_experience": false,
+    "projects_count_as_professional_cybersecurity_experience": false,
+    "labs_count_as_professional_cybersecurity_experience": false,
+    "coursework_counts_as_professional_cybersecurity_experience": false,
+    "certifications_count_as_work_experience": false,
+    "education_counts_as_work_experience": false,
+
+    "may_select_relevant_verified_facts": true,
+    "may_reorder_verified_facts": true,
+    "may_rephrase_verified_facts": true,
+    "may_combine_compatible_verified_facts": true,
+
+    "may_invent_experience": false,
+    "may_invent_years_of_experience": false,
+    "may_invent_skills": false,
+    "may_invent_certifications": false,
+    "may_invent_projects": false,
+    "may_invent_metrics": false,
+    "may_invent_accomplishments": false,
+    "may_upgrade_fundamentals_to_advanced": false,
+    "may_convert_project_experience_to_employment": false,
+
+    "uncertain_claim_action": "require_human_review"
+  }
+}
