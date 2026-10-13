@@ -496,3 +496,108 @@ def test_does_not_treat_completed_education_as_student_only():
     )
 
     assert analysis.requirements.student_only is not True
+
+def test_detects_hybrid_work_arrangement():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "This is a hybrid position requiring three days "
+            "per week in the office."
+        ),
+    )
+
+    assert analysis.requirements.work_arrangement == "hybrid"
+
+
+def test_detects_onsite_work_arrangement():
+    analysis = analyze_job_description(
+        title="SOC Analyst",
+        description="This position is fully onsite in Ottawa.",
+    )
+
+    assert analysis.requirements.work_arrangement == "onsite"
+
+
+def test_detects_on_site_spelling():
+    analysis = analyze_job_description(
+        title="SOC Analyst",
+        description="Employees are required to work on-site five days per week.",
+    )
+
+    assert analysis.requirements.work_arrangement == "onsite"
+
+
+def test_remote_canada_remains_remote():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="This position is remote within Canada.",
+    )
+
+    assert analysis.requirements.work_arrangement == "remote"
+    assert analysis.requirements.remote_eligible_canada is True
+
+
+def test_does_not_assume_remote_canada_from_generic_remote():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="This is a fully remote position.",
+    )
+
+    assert analysis.requirements.work_arrangement == "remote"
+    assert analysis.requirements.remote_eligible_canada is None
+
+
+def test_preserves_hybrid_evidence():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="This is a hybrid position requiring three days in the office.",
+    )
+
+    evidence = [
+        item
+        for item in analysis.evidence
+        if item.field == "work_arrangement"
+    ]
+
+    assert len(evidence) == 1
+    assert "hybrid" in evidence[0].quote.lower()
+
+def test_detects_hybrid_work_model():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="We operate under a hybrid work model.",
+    )
+
+    assert analysis.requirements.work_arrangement == "hybrid"
+
+
+def test_detects_onsite_required_wording():
+    analysis = analyze_job_description(
+        title="SOC Analyst",
+        description="On-site work is required for this position.",
+    )
+
+    assert analysis.requirements.work_arrangement == "onsite"
+
+
+def test_does_not_treat_remote_option_as_fully_remote():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Employees may occasionally have the option "
+            "to work remotely."
+        ),
+    )
+
+    assert analysis.requirements.work_arrangement is None
+    assert analysis.requirements.remote_eligible_canada is None
+
+
+def test_does_not_assume_canada_eligibility_from_100_percent_remote():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="This position is 100% remote.",
+    )
+
+    assert analysis.requirements.work_arrangement == "remote"
+    assert analysis.requirements.remote_eligible_canada is None

@@ -87,6 +87,84 @@ def analyze_job_description(
             )
             break
 
+        # ---------------------------------------------------------
+    # General work arrangement
+    # ---------------------------------------------------------
+    #
+    # Detect remote, hybrid, and onsite arrangements separately
+    # from geographic remote eligibility.
+    #
+    # "Fully remote" means the arrangement is remote, but it
+    # does NOT prove that working from Canada is permitted.
+
+    if requirements.work_arrangement is None:
+        generic_remote_patterns = [
+            r"\bfully remote position\b",
+            r"\bfully remote role\b",
+            r"\b100% remote\b",
+        ]
+
+        for pattern in generic_remote_patterns:
+            match = re.search(pattern, text, flags=re.IGNORECASE)
+
+            if match:
+                requirements.work_arrangement = "remote"
+
+                evidence.append(
+                    ExtractedEvidence(
+                        field="work_arrangement",
+                        value="remote",
+                        quote=match.group(0),
+                    )
+                )
+                break
+
+    if requirements.work_arrangement is None:
+        hybrid_patterns = [
+            r"\bhybrid position\b",
+            r"\bhybrid role\b",
+            r"\bhybrid work(?:ing)?\b",
+        ]
+
+        for pattern in hybrid_patterns:
+            match = re.search(pattern, text, flags=re.IGNORECASE)
+
+            if match:
+                requirements.work_arrangement = "hybrid"
+
+                evidence.append(
+                    ExtractedEvidence(
+                        field="work_arrangement",
+                        value="hybrid",
+                        quote=match.group(0),
+                    )
+                )
+                break
+
+    if requirements.work_arrangement is None:
+        onsite_patterns = [
+            r"\bfully on[- ]?site\b",
+            r"\brequired to work on[- ]?site\b",
+            r"\bon[- ]?site position\b",
+            r"\bon[- ]?site role\b",
+            r"\bon[- ]?site work is required\b",
+        ]
+
+        for pattern in onsite_patterns:
+            match = re.search(pattern, text, flags=re.IGNORECASE)
+
+            if match:
+                requirements.work_arrangement = "onsite"
+
+                evidence.append(
+                    ExtractedEvidence(
+                        field="work_arrangement",
+                        value="onsite",
+                        quote=match.group(0),
+                    )
+                )
+                break
+
     # Explicit seniority signals
     senior_title_pattern = (
         r"\b(?:senior|sr\.?|lead|principal|manager|director)\b"
