@@ -265,3 +265,122 @@ def test_does_not_infer_alternative_from_education_requirement():
 
     assert analysis.requirements.education_substitution is not True
     assert analysis.requirements.experience_alternatives_explicit is not True
+
+def test_extracts_required_secret_clearance():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Candidates must currently hold a valid Secret security clearance."
+        ),
+    )
+
+    assert analysis.requirements.required_clearance == "Secret"
+
+
+def test_extracts_required_reliability_clearance():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Applicants must hold a valid Reliability Status."
+        ),
+    )
+
+    assert analysis.requirements.required_clearance == "Reliability"
+
+
+def test_does_not_treat_eligibility_to_obtain_secret_as_current_clearance():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Candidates must be eligible to obtain a Secret security clearance."
+        ),
+    )
+
+    assert analysis.requirements.required_clearance is None
+
+
+def test_does_not_treat_ability_to_obtain_secret_as_current_clearance():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Must be able to obtain and maintain Secret clearance."
+        ),
+    )
+
+    assert analysis.requirements.required_clearance is None
+
+
+def test_unknown_clearance_remains_unknown():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="Join our cybersecurity operations team.",
+    )
+
+    assert analysis.requirements.required_clearance is None
+
+
+def test_preserves_clearance_evidence():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="Candidates must currently hold a valid Secret security clearance.",
+    )
+
+    evidence = [
+        item
+        for item in analysis.evidence
+        if item.field == "required_clearance"
+    ]
+
+    assert len(evidence) == 1
+    assert "Secret security clearance" in evidence[0].quote
+
+def test_does_not_treat_preferred_secret_clearance_as_required():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="Secret security clearance is preferred.",
+    )
+
+    assert analysis.requirements.required_clearance is None
+
+
+def test_does_not_treat_clearance_mention_as_requirement():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "The successful candidate may be processed for "
+            "Secret security clearance."
+        ),
+    )
+
+    assert analysis.requirements.required_clearance is None
+
+
+def test_does_not_treat_obtain_and_maintain_reliability_as_current_status():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Candidates must be able to obtain and maintain "
+            "Reliability Status."
+        ),
+    )
+
+    assert analysis.requirements.required_clearance is None
+
+
+def test_required_secret_clearance_reaches_eligibility_engine():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Candidates must currently hold a valid "
+            "Secret security clearance."
+        ),
+    )
+
+    result = evaluate_eligibility(
+        analysis.requirements,
+        max_professional_cybersecurity_years=1,
+        candidate_clearance="Reliability",
+    )
+
+    assert analysis.requirements.required_clearance == "Secret"
+    assert result.status == EligibilityStatus.NEEDS_REVIEW

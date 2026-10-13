@@ -340,7 +340,53 @@ def analyze_job_description(
                 )
             )
             break
-            
+
+         # ---------------------------------------------------------
+    # Current security-clearance requirements
+    # ---------------------------------------------------------
+    #
+    # Only extract a clearance when the posting explicitly says
+    # the candidate must already hold it.
+    #
+    # Do NOT treat "eligible to obtain" or "able to obtain" as
+    # a current-clearance requirement.
+
+    current_clearance_patterns = [
+        (
+            "Secret",
+            r"\b(?:candidates?\s+)?must\s+currently\s+hold\s+"
+            r"(?:a\s+)?(?:valid\s+)?secret\s+"
+            r"(?:security\s+)?clearance\b",
+        ),
+        (
+            "Secret",
+            r"\b(?:applicants?\s+)?must\s+hold\s+"
+            r"(?:a\s+)?(?:valid\s+)?secret\s+"
+            r"(?:security\s+)?clearance\b",
+        ),
+        (
+            "Reliability",
+            r"\b(?:candidates?\s+|applicants?\s+)?must\s+"
+            r"(?:currently\s+)?hold\s+"
+            r"(?:a\s+)?(?:valid\s+)?reliability\s+status\b",
+        ),
+    ]
+
+    for clearance_level, pattern in current_clearance_patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+
+        if match:
+            requirements.required_clearance = clearance_level
+
+            evidence.append(
+                ExtractedEvidence(
+                    field="required_clearance",
+                    value=clearance_level,
+                    quote=match.group(0),
+                )
+            )
+            break
+
     # Preserve unknown information instead of guessing.
     if requirements.citizenship_required is None:
         warnings.append(
@@ -372,3 +418,4 @@ if __name__ == "__main__":
     )
 
     print(analysis.model_dump_json(indent=2))
+
