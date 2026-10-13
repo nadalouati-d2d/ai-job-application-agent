@@ -1,5 +1,7 @@
 from agent.eligibility import EligibilityStatus
 from agent.pipeline import JobPipelineResult, analyze_job
+from agent.candidate_profile import load_candidate_profile
+from agent.fit import SkillMatchStatus
 
 
 def test_pipeline_returns_analysis_and_eligibility():
@@ -92,3 +94,82 @@ def test_pipeline_passes_candidate_clearance_to_eligibility():
         "Secret clearance" in reason
         for reason in result.eligibility.reasons
     )
+
+def test_pipeline_fit_is_none_without_candidate_profile():
+    result = analyze_job(
+        title="SOC Analyst",
+        description=(
+            "This is a hybrid role. "
+            "Location: Ottawa, ON. "
+            "Experience with Example SIEM is required."
+        ),
+    )
+
+    assert result.fit is None
+
+
+def test_pipeline_returns_fit_when_candidate_profile_is_provided():
+    profile = load_candidate_profile(
+        "profile/candidate.example.json"
+    )
+
+    result = analyze_job(
+        title="SOC Analyst",
+        description=(
+            "This is a hybrid role. "
+            "Location: Ottawa, ON. "
+            "Experience with Example SIEM is required."
+        ),
+        candidate_profile=profile,
+    )
+
+    assert result.fit is not None
+    assert result.fit.fit_score == 100.0
+
+    match = result.fit.required_skill_matches[0]
+
+    assert match.skill == "Example SIEM"
+    assert match.status == SkillMatchStatus.SUPPORTED
+
+
+def test_pipeline_fit_preserves_project_evidence_boundary():
+    profile = load_candidate_profile(
+        "profile/candidate.example.json"
+    )
+
+    result = analyze_job(
+        title="SOC Analyst",
+        description=(
+            "This is a hybrid role. "
+            "Location: Ottawa, ON. "
+            "Experience with Example SIEM is required."
+        ),
+        candidate_profile=profile,
+    )
+
+    evidence = result.fit.required_skill_matches[0].evidence[0]
+
+    assert evidence.evidence_level == "hands_on_project"
+    assert evidence.professional_cybersecurity_experience is False
+
+
+def test_pipeline_returns_missing_skill_gap():
+    profile = load_candidate_profile(
+        "profile/candidate.example.json"
+    )
+
+    result = analyze_job(
+        title="SOC Analyst",
+        description=(
+            "This is a hybrid role. "
+            "Location: Ottawa, ON. "
+            "Experience with CrowdStrike is required."
+        ),
+        candidate_profile=profile,
+    )
+
+    assert result.fit.fit_score == 0.0
+    assert result.fit.missing_required_skills == [
+        "CrowdStrike"
+    ]
+    assert result.fit.resume_emphasis == []

@@ -1,14 +1,17 @@
 from pydantic import BaseModel
 
 from agent.analyzer import JobAnalysis, analyze_job_description
+from agent.candidate_profile import CandidateProfile
 from agent.eligibility import EligibilityResult, evaluate_eligibility
+from agent.fit import FitResult, analyze_fit
 
 
 class JobPipelineResult(BaseModel):
-    """Combined result of job analysis and eligibility evaluation."""
+    """Combined result of job analysis, eligibility, and candidate fit."""
 
     analysis: JobAnalysis
     eligibility: EligibilityResult
+    fit: FitResult | None = None
 
 
 def analyze_job(
@@ -17,13 +20,14 @@ def analyze_job(
     *,
     max_professional_cybersecurity_years: float = 1,
     candidate_clearance: str | None = "Reliability",
+    candidate_profile: CandidateProfile | None = None,
 ) -> JobPipelineResult:
     """
-    Analyze a raw job posting and evaluate candidate eligibility.
+    Analyze a raw job posting, evaluate eligibility, and optionally
+    evaluate candidate fit.
 
-    This function only orchestrates the existing deterministic analyzer
-    and eligibility engine. It does not duplicate extraction or
-    eligibility logic.
+    Fit analysis is performed only when a validated candidate profile
+    is explicitly provided.
     """
 
     analysis = analyze_job_description(
@@ -39,7 +43,17 @@ def analyze_job(
         candidate_clearance=candidate_clearance,
     )
 
+    fit = (
+        analyze_fit(
+            analysis.requirements,
+            candidate_profile,
+        )
+        if candidate_profile is not None
+        else None
+    )
+
     return JobPipelineResult(
         analysis=analysis,
         eligibility=eligibility,
+        fit=fit,
     )
