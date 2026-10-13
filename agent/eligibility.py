@@ -19,6 +19,9 @@ class JobRequirements(BaseModel):
 
     title: str
 
+    required_skills: list[str] = Field(default_factory=list)
+    preferred_skills: list[str] = Field(default_factory=list)
+
     mandatory_cybersecurity_years: float | None = None
     preferred_cybersecurity_years: float | None = None
 
@@ -34,7 +37,7 @@ class JobRequirements(BaseModel):
     worksite_verified: bool | None = None
     commute_minutes: int | None = None
 
-    remote_eligible_canada: bool | None = None  
+    remote_eligible_canada: bool | None = None
 
     expired: bool | None = None
 
@@ -75,7 +78,7 @@ def evaluate_eligibility(
         exclusion_reasons.append(
             "Job requires citizenship."
         )
-    
+
         # Clearance requirement
     clearance_levels = {
         "reliability": 1,

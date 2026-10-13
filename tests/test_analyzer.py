@@ -725,3 +725,106 @@ def test_remote_canada_does_not_invent_city_location():
     assert analysis.requirements.work_arrangement == "remote"
     assert analysis.requirements.remote_eligible_canada is True
     assert analysis.requirements.location is None
+
+def test_extracts_required_skill():
+    analysis = analyze_job_description(
+        title="SOC Analyst",
+        description="Experience with Splunk is required.",
+    )
+
+    assert analysis.requirements.required_skills == ["Splunk"]
+
+
+def test_extracts_preferred_skill():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="Knowledge of Microsoft Sentinel is preferred.",
+    )
+
+    assert analysis.requirements.preferred_skills == [
+        "Microsoft Sentinel"
+    ]
+
+
+def test_preserves_required_skill_evidence():
+    analysis = analyze_job_description(
+        title="SOC Analyst",
+        description="Experience with Splunk is required.",
+    )
+
+    evidence = [
+        item
+        for item in analysis.evidence
+        if item.field == "required_skills"
+    ]
+
+    assert len(evidence) == 1
+    assert evidence[0].value == "Splunk"
+    assert "Splunk" in evidence[0].quote
+
+
+def test_does_not_treat_environment_tool_as_requirement():
+    analysis = analyze_job_description(
+        title="SOC Analyst",
+        description=(
+            "Our security environment includes CrowdStrike "
+            "and Splunk."
+        ),
+    )
+
+    assert analysis.requirements.required_skills == []
+    assert analysis.requirements.preferred_skills == []
+
+def test_extracts_multiple_explicit_required_skills():
+    analysis = analyze_job_description(
+        title="SOC Analyst",
+        description=(
+            "Experience with Splunk is required. "
+            "Knowledge of Python is required."
+        ),
+    )
+
+    assert analysis.requirements.required_skills == [
+        "Splunk",
+        "Python",
+    ]
+
+
+def test_extracts_required_and_preferred_skills_separately():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Experience with Splunk is required. "
+            "Knowledge of Microsoft Sentinel is preferred."
+        ),
+    )
+
+    assert analysis.requirements.required_skills == ["Splunk"]
+    assert analysis.requirements.preferred_skills == [
+        "Microsoft Sentinel"
+    ]
+
+
+def test_does_not_extract_general_skill_mention():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "The successful candidate will work with "
+            "Splunk, CrowdStrike, and Azure."
+        ),
+    )
+
+    assert analysis.requirements.required_skills == []
+    assert analysis.requirements.preferred_skills == []
+
+
+def test_deduplicates_repeated_required_skill():
+    analysis = analyze_job_description(
+        title="SOC Analyst",
+        description=(
+            "Experience with Splunk is required. "
+            "Knowledge of Splunk is required."
+        ),
+    )
+
+    assert analysis.requirements.required_skills == ["Splunk"]
