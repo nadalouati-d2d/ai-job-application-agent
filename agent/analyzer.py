@@ -211,7 +211,136 @@ def analyze_job_description(
                 quote=required_range_match.group(0),
             )
         )
+        # ---------------------------------------------------------
+    # Explicit experience alternatives
+    # ---------------------------------------------------------
 
+    alternative_detected = False
+
+    # Education explicitly substitutes for experience.
+    education_alternative_patterns = [
+        r"\bor equivalent education(?: and training)?\b",
+        r"\beducation may be considered in lieu of "
+        r"(?:professional )?experience\b",
+        r"\beducation may substitute for "
+        r"(?:professional )?experience\b",
+    ]
+
+    for pattern in education_alternative_patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+
+        if match:
+            requirements.education_substitution = True
+            alternative_detected = True
+
+            evidence.append(
+                ExtractedEvidence(
+                    field="education_substitution",
+                    value="true",
+                    quote=match.group(0),
+                )
+            )
+            break
+
+    # Internships explicitly accepted as experience.
+    internship_patterns = [
+        r"\binternships?\s*,?\s*or equivalent "
+        r"hands-on experience will be considered\b",
+        r"\binternships? may be considered in lieu of "
+        r"(?:professional )?experience\b",
+        r"\binternships? may substitute for "
+        r"(?:professional )?experience\b",
+    ]
+
+    for pattern in internship_patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+
+        if match:
+            requirements.accepts_internships = True
+            alternative_detected = True
+
+            evidence.append(
+                ExtractedEvidence(
+                    field="accepts_internships",
+                    value="true",
+                    quote=match.group(0),
+                )
+            )
+            break
+
+    # Relevant coursework explicitly substitutes for experience.
+    coursework_patterns = [
+        r"\brelevant coursework may be considered in lieu of "
+        r"(?:professional )?experience\b",
+        r"\brelevant coursework may substitute for "
+        r"(?:professional )?experience\b",
+    ]
+
+    for pattern in coursework_patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+
+        if match:
+            requirements.accepts_coursework = True
+            alternative_detected = True
+
+            evidence.append(
+                ExtractedEvidence(
+                    field="accepts_coursework",
+                    value="true",
+                    quote=match.group(0),
+                )
+            )
+            break
+
+    # Projects explicitly substitute for experience.
+    project_patterns = [
+        r"\brelevant cybersecurity projects may substitute "
+        r"for (?:professional )?experience\b",
+        r"\brelevant cybersecurity projects may be considered "
+        r"in lieu of (?:professional )?experience\b",
+    ]
+
+    for pattern in project_patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+
+        if match:
+            requirements.accepts_projects = True
+            alternative_detected = True
+
+            evidence.append(
+                ExtractedEvidence(
+                    field="accepts_projects",
+                    value="true",
+                    quote=match.group(0),
+                )
+            )
+            break
+
+    if alternative_detected:
+        requirements.experience_alternatives_explicit = True
+
+    # Recent-graduate language is useful independently of whether
+    # the posting contains a numeric experience requirement.
+    recent_graduate_patterns = [
+        r"\brecent graduates? (?:are )?encouraged to apply\b",
+        r"\brecent graduates? (?:are )?welcome to apply\b",
+    ]
+
+    for pattern in recent_graduate_patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+
+        if match:
+            requirements.accepts_recent_graduates = True
+
+            evidence.append(
+                ExtractedEvidence(
+                    field="accepts_recent_graduates",
+                    value="true",
+                    quote=match.group(0),
+                )
+            )
+            break
+            
     # Preserve unknown information instead of guessing.
     if requirements.citizenship_required is None:
         warnings.append(
