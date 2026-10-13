@@ -609,6 +609,7 @@ def test_extracts_ottawa_location():
     )
 
     assert analysis.requirements.location == "Ottawa, ON"
+    assert analysis.requirements.location_country == "Canada"
 
 
 def test_extracts_toronto_location():
@@ -618,6 +619,7 @@ def test_extracts_toronto_location():
     )
 
     assert analysis.requirements.location == "Toronto, ON"
+    assert analysis.requirements.location_country == "Canada"
 
 
 def test_extracts_calgary_location():
@@ -627,6 +629,7 @@ def test_extracts_calgary_location():
     )
 
     assert analysis.requirements.location == "Calgary, AB"
+    assert analysis.requirements.location_country == "Canada"
 
 
 def test_extracts_full_province_name():
@@ -636,6 +639,7 @@ def test_extracts_full_province_name():
     )
 
     assert analysis.requirements.location == "Vancouver, British Columbia"
+    assert analysis.requirements.location_country == "Canada"
 
 
 def test_does_not_infer_location_from_company_background():
@@ -648,6 +652,7 @@ def test_does_not_infer_location_from_company_background():
     )
 
     assert analysis.requirements.location is None
+    assert analysis.requirements.location_country is None
 
 
 def test_city_location_does_not_verify_exact_worksite():

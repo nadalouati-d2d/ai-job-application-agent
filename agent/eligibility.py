@@ -28,6 +28,7 @@ class JobRequirements(BaseModel):
     senior_role: bool | None = None
 
     location: str | None = None
+    location_country: str | None = None
 
     work_arrangement: str | None = None
     worksite_verified: bool | None = None
@@ -161,7 +162,7 @@ def evaluate_eligibility(
             "requirement is unknown."
         )
 
-    # Location and work-arrangement eligibility
+        # Location and work-arrangement eligibility
     arrangement = (
         job.work_arrangement.lower()
         if job.work_arrangement
@@ -169,32 +170,30 @@ def evaluate_eligibility(
     )
 
     if arrangement == "remote":
+        # Remote work must explicitly permit working from Canada.
         if job.remote_eligible_canada is not True:
             review_reasons.append(
                 "Remote eligibility for Canada is unknown."
             )
 
     elif arrangement in {"onsite", "hybrid"}:
-        if job.worksite_verified is not True:
+        # Candidate is open to onsite/hybrid work anywhere in Canada.
+        # Commute distance and exact worksite verification do not
+        # determine eligibility.
+        if job.location_country is None:
             review_reasons.append(
-                "Onsite/hybrid worksite has not been verified."
+                "Country for onsite/hybrid work is unknown."
             )
-        elif job.commute_minutes is None:
+        elif job.location_country.strip().lower() != "canada":
             review_reasons.append(
-                "Commute time to the verified worksite is unknown."
-            )
-        elif job.commute_minutes > 30:
-            exclusion_reasons.append(
-                f"Verified commute ({job.commute_minutes} minutes) "
-                "exceeds the 30-minute limit."
+                f"Onsite/hybrid work location is outside Canada: "
+                f"{job.location_country}."
             )
 
     else:
-        # Arrangement itself is unknown.
-        if job.remote_eligible_canada is not True:
-            review_reasons.append(
-                "Work arrangement or remote eligibility is unknown."
-            )
+        review_reasons.append(
+            "Work arrangement is unknown."
+        )
 
     # Hard exclusions always win.
     if exclusion_reasons:
