@@ -581,6 +581,74 @@ def analyze_job_description(
             )
             break
 
+        # ---------------------------------------------------------
+    # Explicit skill requirements
+    # ---------------------------------------------------------
+    #
+    # Extract skills only when the posting explicitly describes
+    # them as required or preferred. Merely mentioning a tool in
+    # the employer's environment is not sufficient.
+
+    required_skill_patterns = [
+        re.compile(
+            r"\bexperience with "
+            r"(?P<skill>[A-Za-z0-9][A-Za-z0-9 +#/-]*?) "
+            r"is required\b",
+            flags=re.IGNORECASE,
+        ),
+        re.compile(
+            r"\bknowledge of "
+            r"(?P<skill>[A-Za-z0-9][A-Za-z0-9 +#/-]*?) "
+            r"is required\b",
+            flags=re.IGNORECASE,
+        ),
+    ]
+
+    preferred_skill_patterns = [
+        re.compile(
+            r"\bexperience with "
+            r"(?P<skill>[A-Za-z0-9][A-Za-z0-9 +#/-]*?) "
+            r"is preferred\b",
+            flags=re.IGNORECASE,
+        ),
+        re.compile(
+            r"\bknowledge of "
+            r"(?P<skill>[A-Za-z0-9][A-Za-z0-9 +#/-]*?) "
+            r"is preferred\b",
+            flags=re.IGNORECASE,
+        ),
+    ]
+
+    for pattern in required_skill_patterns:
+        for match in pattern.finditer(text):
+            skill = match.group("skill").strip()
+
+            if skill not in requirements.required_skills:
+                requirements.required_skills.append(skill)
+
+                evidence.append(
+                    ExtractedEvidence(
+                        field="required_skills",
+                        value=skill,
+                        quote=match.group(0),
+                    )
+                )
+
+    for pattern in preferred_skill_patterns:
+        for match in pattern.finditer(text):
+            skill = match.group("skill").strip()
+
+            if skill not in requirements.preferred_skills:
+                requirements.preferred_skills.append(skill)
+
+                evidence.append(
+                    ExtractedEvidence(
+                        field="preferred_skills",
+                        value=skill,
+                        quote=match.group(0),
+                    )
+                )
+
     # Preserve unknown information instead of guessing.
     if requirements.citizenship_required is None:
         warnings.append(
