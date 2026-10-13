@@ -34,12 +34,18 @@ class SkillMatch(BaseModel):
     status: SkillMatchStatus
     evidence: list[CandidateEvidence] = Field(default_factory=list)
 
-
 class FitResult(BaseModel):
     required_skill_matches: list[SkillMatch] = Field(
         default_factory=list
     )
     preferred_skill_matches: list[SkillMatch] = Field(
+        default_factory=list
+    )
+    fit_score: float | None = None
+    missing_required_skills: list[str] = Field(
+        default_factory=list
+    )
+    missing_preferred_skills: list[str] = Field(
         default_factory=list
     )
 
@@ -143,7 +149,51 @@ def analyze_fit(
         for skill in job.preferred_skills
     ]
 
+    missing_required_skills = [
+        match.skill
+        for match in required_matches
+        if match.status == SkillMatchStatus.MISSING
+    ]
+
+    missing_preferred_skills = [
+        match.skill
+        for match in preferred_matches
+        if match.status == SkillMatchStatus.MISSING
+    ]
+
+    required_weight = 2
+    preferred_weight = 1
+
+    total_weight = (
+        len(required_matches) * required_weight
+        + len(preferred_matches) * preferred_weight
+    )
+
+    if total_weight == 0:
+        fit_score = None
+    else:
+        supported_weight = (
+            sum(
+                required_weight
+                for match in required_matches
+                if match.status == SkillMatchStatus.SUPPORTED
+            )
+            + sum(
+                preferred_weight
+                for match in preferred_matches
+                if match.status == SkillMatchStatus.SUPPORTED
+            )
+        )
+
+        fit_score = round(
+            supported_weight / total_weight * 100,
+            2,
+        )
+
     return FitResult(
         required_skill_matches=required_matches,
         preferred_skill_matches=preferred_matches,
+        fit_score=fit_score,
+        missing_required_skills=missing_required_skills,
+        missing_preferred_skills=missing_preferred_skills,
     )

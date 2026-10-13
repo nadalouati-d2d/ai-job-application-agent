@@ -158,3 +158,117 @@ def test_does_not_use_unverified_project_evidence():
 
     assert match.status == SkillMatchStatus.MISSING
     assert match.evidence == []
+
+def test_fit_score_is_100_when_all_skills_are_supported():
+    profile = load_example_profile()
+
+    job = JobRequirements(
+        title="SOC Analyst",
+        required_skills=["Example SIEM"],
+    )
+
+    result = analyze_fit(job, profile)
+
+    assert result.fit_score == 100.0
+    assert result.missing_required_skills == []
+    assert result.missing_preferred_skills == []
+
+
+def test_missing_required_skill_reduces_score_more_than_preferred():
+    profile = load_example_profile()
+
+    job = JobRequirements(
+        title="SOC Analyst",
+        required_skills=[
+            "Example SIEM",
+            "CrowdStrike",
+        ],
+        preferred_skills=["Unknown Tool"],
+    )
+
+    result = analyze_fit(job, profile)
+
+    # Required skills have weight 2 each.
+    # Preferred skills have weight 1 each.
+    #
+    # Supported weight = 2
+    # Total weight = 2 + 2 + 1 = 5
+    # Score = 2 / 5 * 100 = 40
+    assert result.fit_score == 40.0
+
+    assert result.missing_required_skills == [
+        "CrowdStrike"
+    ]
+    assert result.missing_preferred_skills == [
+        "Unknown Tool"
+    ]
+
+
+def test_project_supported_skill_receives_skill_match_credit():
+    profile = load_example_profile()
+
+    job = JobRequirements(
+        title="SOC Analyst",
+        required_skills=["Example SIEM"],
+        preferred_skills=["CrowdStrike"],
+    )
+
+    result = analyze_fit(job, profile)
+
+    # Project evidence supports the skill requirement,
+    # but remains non-professional evidence.
+    assert result.fit_score == 66.67
+
+    evidence = result.required_skill_matches[0].evidence[0]
+
+    assert evidence.evidence_level == "hands_on_project"
+    assert evidence.professional_cybersecurity_experience is False
+
+
+def test_fit_score_is_unknown_when_job_has_no_extracted_skills():
+    profile = load_example_profile()
+
+    job = JobRequirements(
+        title="SOC Analyst",
+    )
+
+    result = analyze_fit(job, profile)
+
+    assert result.fit_score is None
+    assert result.missing_required_skills == []
+    assert result.missing_preferred_skills == []
+
+def test_multiple_evidence_sources_do_not_double_count_skill():
+    profile = load_example_profile()
+
+    profile.professional_experience.append(
+        ProfessionalExperience(
+            id="professional-example-siem",
+            title="Cybersecurity Intern",
+            employer="Example Company",
+            location="Example City, ON",
+            start="2026-01",
+            end=None,
+            current=True,
+            employment_type="internship",
+            evidence_level="professional",
+            categories=["security_operations"],
+            verified=True,
+            facts=[
+                "Reviewed Example SIEM security configurations."
+            ],
+        )
+    )
+
+    job = JobRequirements(
+        title="SOC Analyst",
+        required_skills=["Example SIEM"],
+    )
+
+    result = analyze_fit(job, profile)
+
+    match = result.required_skill_matches[0]
+
+    assert match.status == SkillMatchStatus.SUPPORTED
+    assert len(match.evidence) == 2
+    assert result.fit_score == 100.0
