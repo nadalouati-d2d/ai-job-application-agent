@@ -14,6 +14,7 @@ def base_job(**overrides):
         "senior_role": False,
 
         "location": "Ottawa, ON",
+	"location_country":"Canada",
         "work_arrangement": "hybrid",
         "worksite_verified": True,
         "commute_minutes": 20,
@@ -146,28 +147,59 @@ def test_verified_onsite_job_within_commute_is_suitable():
     assert result.status == EligibilityStatus.SUITABLE
 
 
-def test_verified_onsite_job_beyond_commute_is_excluded():
+def test_canadian_onsite_job_is_not_excluded_by_commute_distance():
     result = evaluate_eligibility(
         base_job(
+            location="Toronto, ON",
+            location_country="Canada",
             work_arrangement="onsite",
             worksite_verified=True,
-            commute_minutes=45,
+            commute_minutes=300,
         )
     )
 
-    assert result.status == EligibilityStatus.EXCLUDED
+    assert result.status == EligibilityStatus.SUITABLE
 
 
-def test_hybrid_job_with_unverified_worksite_requires_review():
+def test_canadian_hybrid_job_does_not_require_commute_calculation():
     result = evaluate_eligibility(
         base_job(
+            location="Calgary, AB",
+            location_country="Canada",
             work_arrangement="hybrid",
             worksite_verified=False,
             commute_minutes=None,
         )
     )
 
+    assert result.status == EligibilityStatus.SUITABLE
+
+
+def test_onsite_job_with_unknown_country_requires_review():
+    result = evaluate_eligibility(
+        base_job(
+            location="Unknown City",
+            location_country=None,
+            work_arrangement="onsite",
+            worksite_verified=False,
+            commute_minutes=None,
+        )
+    )
+
     assert result.status == EligibilityStatus.NEEDS_REVIEW
+
+def test_canadian_hybrid_job_with_unverified_worksite_is_suitable():
+    result = evaluate_eligibility(
+        base_job(
+            location="Vancouver, BC",
+            location_country="Canada",
+            work_arrangement="hybrid",
+            worksite_verified=False,
+            commute_minutes=None,
+        )
+    )
+
+    assert result.status == EligibilityStatus.SUITABLE
 
 
 def test_remote_job_with_unknown_canada_eligibility_requires_review():

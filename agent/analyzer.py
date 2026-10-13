@@ -568,6 +568,7 @@ def analyze_job_description(
 
         if match:
             location = match.group("location").strip()
+            requirements.location_country = "Canada"
 
             requirements.location = location
 
