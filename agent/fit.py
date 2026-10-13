@@ -34,6 +34,16 @@ class SkillMatch(BaseModel):
     status: SkillMatchStatus
     evidence: list[CandidateEvidence] = Field(default_factory=list)
 
+class ResumeEmphasis(BaseModel):
+    skill: str
+    requirement_type: str
+    source_type: EvidenceSourceType
+    source_id: str
+    source_name: str
+    evidence_level: str
+    fact: str
+    professional_cybersecurity_experience: bool
+
 class FitResult(BaseModel):
     required_skill_matches: list[SkillMatch] = Field(
         default_factory=list
@@ -46,6 +56,9 @@ class FitResult(BaseModel):
         default_factory=list
     )
     missing_preferred_skills: list[str] = Field(
+        default_factory=list
+    )
+    resume_emphasis: list[ResumeEmphasis] = Field(
         default_factory=list
     )
 
@@ -133,7 +146,33 @@ def _match_skill(
         status=status,
         evidence=evidence,
     )
+def _build_resume_emphasis(
+    matches: list[SkillMatch],
+    requirement_type: str,
+) -> list[ResumeEmphasis]:
+    emphasis: list[ResumeEmphasis] = []
 
+    for match in matches:
+        if match.status != SkillMatchStatus.SUPPORTED:
+            continue
+
+        for evidence in match.evidence:
+            emphasis.append(
+                ResumeEmphasis(
+                    skill=match.skill,
+                    requirement_type=requirement_type,
+                    source_type=evidence.source_type,
+                    source_id=evidence.source_id,
+                    source_name=evidence.source_name,
+                    evidence_level=evidence.evidence_level,
+                    fact=evidence.fact,
+                    professional_cybersecurity_experience=(
+                        evidence.professional_cybersecurity_experience
+                    ),
+                )
+            )
+
+    return emphasis
 
 def analyze_fit(
     job: JobRequirements,
@@ -190,10 +229,22 @@ def analyze_fit(
             2,
         )
 
+    resume_emphasis = (
+        _build_resume_emphasis(
+            required_matches,
+            "required",
+        )
+        + _build_resume_emphasis(
+            preferred_matches,
+            "preferred",
+        )
+    )
+
     return FitResult(
         required_skill_matches=required_matches,
         preferred_skill_matches=preferred_matches,
         fit_score=fit_score,
         missing_required_skills=missing_required_skills,
         missing_preferred_skills=missing_preferred_skills,
+        resume_emphasis=resume_emphasis,
     )

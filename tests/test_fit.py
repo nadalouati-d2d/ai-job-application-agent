@@ -272,3 +272,53 @@ def test_multiple_evidence_sources_do_not_double_count_skill():
     assert match.status == SkillMatchStatus.SUPPORTED
     assert len(match.evidence) == 2
     assert result.fit_score == 100.0
+
+def test_resume_emphasis_prioritizes_supported_required_skill():
+    profile = load_example_profile()
+
+    job = JobRequirements(
+        title="SOC Analyst",
+        required_skills=["Example SIEM"],
+    )
+
+    result = analyze_fit(job, profile)
+
+    assert len(result.resume_emphasis) == 1
+
+    emphasis = result.resume_emphasis[0]
+
+    assert emphasis.skill == "Example SIEM"
+    assert emphasis.requirement_type == "required"
+    assert emphasis.source_id == "example-soc-project"
+    assert emphasis.evidence_level == "hands_on_project"
+    assert emphasis.professional_cybersecurity_experience is False
+
+
+def test_missing_skill_is_not_added_to_resume_emphasis():
+    profile = load_example_profile()
+
+    job = JobRequirements(
+        title="SOC Analyst",
+        required_skills=["CrowdStrike"],
+    )
+
+    result = analyze_fit(job, profile)
+
+    assert result.resume_emphasis == []
+
+
+def test_required_emphasis_comes_before_preferred_emphasis():
+    profile = load_example_profile()
+
+    job = JobRequirements(
+        title="SOC Analyst",
+        required_skills=["Example SIEM"],
+        preferred_skills=["Example SIEM"],
+    )
+
+    result = analyze_fit(job, profile)
+
+    assert len(result.resume_emphasis) == 2
+
+    assert result.resume_emphasis[0].requirement_type == "required"
+    assert result.resume_emphasis[1].requirement_type == "preferred"
