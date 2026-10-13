@@ -1,6 +1,5 @@
 {
   "profile_version": "1.0",
-
   "identity": {
     "name": "Example Candidate",
     "location": "Example City, ON",
@@ -8,7 +7,6 @@
     "phone": "000-000-0000",
     "linkedin": "https://www.linkedin.com/in/example"
   },
-
   "work_authorization": {
     "country": "Canada",
     "status": "permanent_resident",
@@ -19,7 +17,6 @@
       "granted": true
     }
   },
-
   "career": {
     "target_seniority": [
       "entry-level",
@@ -34,7 +31,6 @@
       "incident_response"
     ]
   },
-
   "professional_experience": [
     {
       "id": "example-security-internship",
@@ -55,9 +51,7 @@
       ]
     }
   ],
-
   "academic_experience": [],
-
   "projects": [
     {
       "id": "example-soc-project",
@@ -78,7 +72,6 @@
       ]
     }
   ],
-
   "education": [
     {
       "credential": "Graduate Certificate",
@@ -89,31 +82,28 @@
       "gpa": null
     }
   ],
-
   "certifications": {
     "completed": [],
     "in_progress": []
   },
-
   "skills": {
     "security_operations": [
       "Security monitoring",
       "Alert triage"
     ]
   },
-
   "languages": [
     {
       "language": "English",
       "level": "Professional working proficiency"
     }
   ],
-
   "job_search_constraints": {
     "base_location": "Example City, ON",
-    "max_commute_minutes": 30,
+    "onsite_hybrid_allowed_countries": [
+      "Canada"
+    ],
     "remote_allowed": [
-      "Ontario",
       "Canada"
     ],
     "target_experience_level": [
@@ -132,12 +122,11 @@
     "reject_senior_roles": true,
     "reject_expired_jobs": true,
     "student_only_roles": "needs_review",
-    "unknown_worksite": "needs_review",
     "unknown_remote_eligibility": "needs_review",
     "ambiguous_experience_requirement": "needs_review",
-    "missing_information": "preserve_as_unknown"
+    "missing_information": "preserve_as_unknown",
+    "unknown_onsite_hybrid_country": "needs_review"
   },
-
   "truth_policy": {
     "professional_cybersecurity_experience_sources": [
       "professional_experience"
@@ -149,12 +138,10 @@
     "coursework_counts_as_professional_cybersecurity_experience": false,
     "certifications_count_as_work_experience": false,
     "education_counts_as_work_experience": false,
-
     "may_select_relevant_verified_facts": true,
     "may_reorder_verified_facts": true,
     "may_rephrase_verified_facts": true,
     "may_combine_compatible_verified_facts": true,
-
     "may_invent_experience": false,
     "may_invent_years_of_experience": false,
     "may_invent_skills": false,
@@ -164,7 +151,6 @@
     "may_invent_accomplishments": false,
     "may_upgrade_fundamentals_to_advanced": false,
     "may_convert_project_experience_to_employment": false,
-
     "uncertain_claim_action": "require_human_review"
   }
 }
