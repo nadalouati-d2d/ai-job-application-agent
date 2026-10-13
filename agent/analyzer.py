@@ -102,6 +102,115 @@ def analyze_job_description(
                 quote=title,
             )
         )
+        # ---------------------------------------------------------
+    # Cybersecurity experience requirements
+    # ---------------------------------------------------------
+
+    # Preferred experience:
+    # "2 years of cybersecurity experience preferred"
+    preferred_pattern = re.compile(
+        r"\b(?P<years>\d+(?:\.\d+)?)\+?"
+        r"\s+years?\s+of\s+"
+        r"(?:professional\s+)?cybersecurity\s+experience"
+        r"\s+(?:is\s+)?preferred\b",
+        flags=re.IGNORECASE,
+    )
+
+    preferred_match = preferred_pattern.search(text)
+
+    if preferred_match:
+        years = float(preferred_match.group("years"))
+
+        requirements.preferred_cybersecurity_years = years
+
+        evidence.append(
+            ExtractedEvidence(
+                field="preferred_cybersecurity_years",
+                value=f"{years:g}",
+                quote=preferred_match.group(0),
+            )
+        )
+
+    # Explicit required experience:
+    #
+    # "2 years of cybersecurity experience required"
+    # "1 year of cybersecurity experience is required"
+    required_suffix_pattern = re.compile(
+        r"\b(?P<years>\d+(?:\.\d+)?)\+?"
+        r"\s+years?\s+of\s+"
+        r"(?:professional\s+)?cybersecurity\s+experience"
+        r"\s+(?:is\s+)?(?:required|mandatory)\b",
+        flags=re.IGNORECASE,
+    )
+
+    required_match = required_suffix_pattern.search(text)
+
+    if required_match:
+        years = float(required_match.group("years"))
+
+        requirements.mandatory_cybersecurity_years = years
+
+        evidence.append(
+            ExtractedEvidence(
+                field="mandatory_cybersecurity_years",
+                value=f"{years:g}",
+                quote=required_match.group(0),
+            )
+        )
+
+    # "must have at least 2 years of cybersecurity experience"
+    required_at_least_pattern = re.compile(
+        r"\b(?:candidates?\s+)?must\s+have\s+"
+        r"(?:at\s+least\s+)?"
+        r"(?P<years>\d+(?:\.\d+)?)\+?"
+        r"\s+years?\s+of\s+"
+        r"(?:professional\s+)?cybersecurity\s+experience\b",
+        flags=re.IGNORECASE,
+    )
+
+    required_at_least_match = required_at_least_pattern.search(text)
+
+    if required_at_least_match:
+        years = float(required_at_least_match.group("years"))
+
+        requirements.mandatory_cybersecurity_years = years
+
+        evidence.append(
+            ExtractedEvidence(
+                field="mandatory_cybersecurity_years",
+                value=f"{years:g}",
+                quote=required_at_least_match.group(0),
+            )
+        )
+
+    # Required range:
+    # "must have 1-2 years of cybersecurity experience"
+    #
+    # We use the lower bound because the posting explicitly accepts
+    # candidates beginning at that experience level.
+    required_range_pattern = re.compile(
+        r"\b(?:candidates?\s+)?must\s+have\s+"
+        r"(?P<minimum>\d+(?:\.\d+)?)\s*[-–]\s*"
+        r"(?P<maximum>\d+(?:\.\d+)?)"
+        r"\s+years?\s+of\s+"
+        r"(?:professional\s+)?cybersecurity\s+experience\b",
+        flags=re.IGNORECASE,
+    )
+
+    required_range_match = required_range_pattern.search(text)
+
+    if required_range_match:
+        minimum = float(required_range_match.group("minimum"))
+
+        requirements.mandatory_cybersecurity_years = minimum
+
+        evidence.append(
+            ExtractedEvidence(
+                field="mandatory_cybersecurity_years",
+                value=f"{minimum:g}",
+                quote=required_range_match.group(0),
+            )
+        )
 
     # Preserve unknown information instead of guessing.
     if requirements.citizenship_required is None:
