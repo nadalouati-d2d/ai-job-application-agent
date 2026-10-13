@@ -384,3 +384,115 @@ def test_required_secret_clearance_reaches_eligibility_engine():
 
     assert analysis.requirements.required_clearance == "Secret"
     assert result.status == EligibilityStatus.NEEDS_REVIEW
+
+def test_detects_current_student_only_requirement():
+    analysis = analyze_job_description(
+        title="Cybersecurity Intern",
+        description=(
+            "Applicants must be currently enrolled in a "
+            "college or university program."
+        ),
+    )
+
+    assert analysis.requirements.student_only is True
+
+
+def test_detects_returning_to_school_requirement():
+    analysis = analyze_job_description(
+        title="Security Intern",
+        description=(
+            "Candidates must be returning to school "
+            "after completion of the internship."
+        ),
+    )
+
+    assert analysis.requirements.student_only is True
+
+
+def test_does_not_treat_recent_graduate_language_as_student_only():
+    analysis = analyze_job_description(
+        title="Junior Security Analyst",
+        description=(
+            "Students and recent graduates are encouraged to apply."
+        ),
+    )
+
+    assert analysis.requirements.student_only is not True
+
+
+def test_does_not_infer_student_only_from_intern_title():
+    analysis = analyze_job_description(
+        title="Cybersecurity Intern",
+        description=(
+            "We welcome candidates interested in beginning "
+            "a career in cybersecurity."
+        ),
+    )
+
+    assert analysis.requirements.student_only is not True
+
+
+def test_preserves_student_only_evidence():
+    analysis = analyze_job_description(
+        title="Cybersecurity Intern",
+        description=(
+            "Applicants must be currently enrolled in a "
+            "college or university program."
+        ),
+    )
+
+    evidence = [
+        item
+        for item in analysis.evidence
+        if item.field == "student_only"
+    ]
+
+    assert len(evidence) == 1
+    assert "currently enrolled" in evidence[0].quote.lower()
+
+def test_detects_enrolled_in_postsecondary_program():
+    analysis = analyze_job_description(
+        title="Cybersecurity Co-op",
+        description=(
+            "Candidates must be currently enrolled in a "
+            "post-secondary program."
+        ),
+    )
+
+    assert analysis.requirements.student_only is True
+
+
+def test_detects_return_to_studies_requirement():
+    analysis = analyze_job_description(
+        title="Security Intern",
+        description=(
+            "Applicants must return to studies following "
+            "the work term."
+        ),
+    )
+
+    assert analysis.requirements.student_only is True
+
+
+def test_does_not_treat_degree_requirement_as_student_only():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "A bachelor's degree in Computer Science or "
+            "Cybersecurity is required."
+        ),
+    )
+
+    assert analysis.requirements.student_only is not True
+
+
+def test_does_not_treat_completed_education_as_student_only():
+    analysis = analyze_job_description(
+        title="Junior Security Analyst",
+        description=(
+            "Candidates must have completed a college or "
+            "university cybersecurity program."
+        ),
+    )
+
+    assert analysis.requirements.student_only is not True

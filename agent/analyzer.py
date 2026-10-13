@@ -387,6 +387,67 @@ def analyze_job_description(
             )
             break
 
+        # ---------------------------------------------------------
+    # Student-only eligibility requirements
+    # ---------------------------------------------------------
+    #
+    # Only mark a posting as student-only when the description
+    # explicitly requires current enrollment or returning to
+    # school. An internship title alone is not sufficient.
+
+    student_only_patterns = [
+        r"\bapplicants? must be currently enrolled in "
+        r"(?:a\s+)?college or university program\b",
+
+        r"\bcandidates? must be currently enrolled in "
+        r"(?:a\s+)?college or university program\b",
+
+        r"\bmust be currently enrolled in "
+        r"(?:a\s+)?college or university program\b",
+
+        r"\bcandidates? must be returning to school "
+        r"after completion of the internship\b",
+
+        r"\bapplicants? must be returning to school "
+        r"after completion of the internship\b",
+
+        r"\bmust be returning to school "
+        r"after completion of the internship\b",
+
+                r"\bcandidates? must be currently enrolled in "
+        r"(?:a\s+)?post-secondary program\b",
+
+        r"\bapplicants? must be currently enrolled in "
+        r"(?:a\s+)?post-secondary program\b",
+
+        r"\bmust be currently enrolled in "
+        r"(?:a\s+)?post-secondary program\b",
+
+        r"\bapplicants? must return to studies following "
+        r"the work term\b",
+
+        r"\bcandidates? must return to studies following "
+        r"the work term\b",
+
+        r"\bmust return to studies following "
+        r"the work term\b",
+    ]
+
+    for pattern in student_only_patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+
+        if match:
+            requirements.student_only = True
+
+            evidence.append(
+                ExtractedEvidence(
+                    field="student_only",
+                    value="true",
+                    quote=match.group(0),
+                )
+            )
+            break
+
     # Preserve unknown information instead of guessing.
     if requirements.citizenship_required is None:
         warnings.append(
