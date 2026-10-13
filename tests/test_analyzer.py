@@ -601,3 +601,122 @@ def test_does_not_assume_canada_eligibility_from_100_percent_remote():
 
     assert analysis.requirements.work_arrangement == "remote"
     assert analysis.requirements.remote_eligible_canada is None
+
+def test_extracts_ottawa_location():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="Location: Ottawa, ON.",
+    )
+
+    assert analysis.requirements.location == "Ottawa, ON"
+
+
+def test_extracts_toronto_location():
+    analysis = analyze_job_description(
+        title="SOC Analyst",
+        description="Location: Toronto, ON.",
+    )
+
+    assert analysis.requirements.location == "Toronto, ON"
+
+
+def test_extracts_calgary_location():
+    analysis = analyze_job_description(
+        title="Cybersecurity Analyst",
+        description="Work location: Calgary, AB.",
+    )
+
+    assert analysis.requirements.location == "Calgary, AB"
+
+
+def test_extracts_full_province_name():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="This position is based in Vancouver, British Columbia.",
+    )
+
+    assert analysis.requirements.location == "Vancouver, British Columbia"
+
+
+def test_does_not_infer_location_from_company_background():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Our company was founded in Ottawa and provides "
+            "cybersecurity services across Canada."
+        ),
+    )
+
+    assert analysis.requirements.location is None
+
+
+def test_city_location_does_not_verify_exact_worksite():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="Location: Toronto, ON.",
+    )
+
+    assert analysis.requirements.location == "Toronto, ON"
+    assert analysis.requirements.worksite_verified is not True
+
+
+def test_preserves_location_evidence():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="Work location: Calgary, AB.",
+    )
+
+    evidence = [
+        item
+        for item in analysis.evidence
+        if item.field == "location"
+    ]
+
+    assert len(evidence) == 1
+    assert "Calgary, AB" in evidence[0].quote
+
+def test_location_does_not_capture_following_sentence():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "Location: Toronto, ON. "
+            "The successful candidate will join our SOC team."
+        ),
+    )
+
+    assert analysis.requirements.location == "Toronto, ON"
+
+
+def test_does_not_infer_location_from_service_area():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "We provide services to customers in Calgary, AB "
+            "and across Western Canada."
+        ),
+    )
+
+    assert analysis.requirements.location is None
+
+
+def test_does_not_infer_location_from_office_mention():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description=(
+            "The company maintains offices in Toronto, ON "
+            "and Vancouver, BC."
+        ),
+    )
+
+    assert analysis.requirements.location is None
+
+
+def test_remote_canada_does_not_invent_city_location():
+    analysis = analyze_job_description(
+        title="Security Analyst",
+        description="This position is remote within Canada.",
+    )
+
+    assert analysis.requirements.work_arrangement == "remote"
+    assert analysis.requirements.remote_eligible_canada is True
+    assert analysis.requirements.location is None

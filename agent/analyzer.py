@@ -526,6 +526,60 @@ def analyze_job_description(
             )
             break
 
+        # ---------------------------------------------------------
+    # Explicit Canadian job location
+    # ---------------------------------------------------------
+    #
+    # Extract a location only when the posting explicitly labels
+    # it as the job/work location or says the position is based
+    # there.
+    #
+    # A city/province is NOT enough to mark the exact worksite
+    # as verified.
+
+    location_patterns = [
+        # "Location: Ottawa, ON"
+        # "Work location: Calgary, AB"
+        re.compile(
+            r"\b(?:work\s+)?location\s*:\s*"
+            r"(?P<location>"
+            r"[A-Za-zÀ-ÿ .'-]+,\s*"
+            r"(?:ON|QC|BC|AB|MB|SK|NS|NB|NL|PE|NT|NU|YT)"
+            r")\b",
+            flags=re.IGNORECASE,
+        ),
+
+        # "This position is based in Vancouver, British Columbia"
+        re.compile(
+            r"\b(?:this\s+)?position\s+is\s+based\s+in\s+"
+            r"(?P<location>"
+            r"[A-Za-zÀ-ÿ .'-]+,\s*"
+            r"(?:Ontario|Quebec|Québec|British Columbia|Alberta|"
+            r"Manitoba|Saskatchewan|Nova Scotia|New Brunswick|"
+            r"Newfoundland and Labrador|Prince Edward Island|"
+            r"Northwest Territories|Nunavut|Yukon)"
+            r")\b",
+            flags=re.IGNORECASE,
+        ),
+    ]
+
+    for pattern in location_patterns:
+        match = pattern.search(text)
+
+        if match:
+            location = match.group("location").strip()
+
+            requirements.location = location
+
+            evidence.append(
+                ExtractedEvidence(
+                    field="location",
+                    value=location,
+                    quote=match.group(0),
+                )
+            )
+            break
+
     # Preserve unknown information instead of guessing.
     if requirements.citizenship_required is None:
         warnings.append(
